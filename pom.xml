@@ -109,18 +109,18 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>TriangleMeasurement</id>
+                        <id>ConnectedComponentsExample</id>
                         <phase>package</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <classifier>TriangleMeasurements</classifier>
+                            <classifier>ConnectedComponentsExample</classifier>
 
                             <archive>
                                 <manifestEntries>
                                     <program-class>
-                                        org.apache.flink.graph.streaming.example.triangles.TriangleMeasurements
+                                        org.apache.flink.graph.streaming.example.ConnectedComponentsExample
                                     </program-class>
                                 </manifestEntries>
                             </archive>
