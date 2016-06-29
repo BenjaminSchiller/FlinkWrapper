@@ -24,6 +24,12 @@
 
         <dependency>
             <groupId>org.apache.flink</groupId>
+            <artifactId>flink-gelly-scala_2.10</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java_2.10</artifactId>
             <version>1.0.3</version>
         </dependency>
@@ -96,7 +102,7 @@
                             <archive>
                                 <manifestEntries>
                                     <program-class>
-                                        org.apache.flink.graph.streaming.example.bipartiteness.BipartiteMeasurement
+                                        org.apache.flink.graph.streaming.example.BipartitenessCheckExample
                                     </program-class>
                                 </manifestEntries>
                             </archive>
