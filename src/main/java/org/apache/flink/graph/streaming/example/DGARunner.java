@@ -1,32 +1,19 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.flink.graph.streaming.example;
 
 import org.apache.flink.api.common.ProgramDescription;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.graph.Edge;
+import org.apache.flink.graph.Triplet;
 import org.apache.flink.graph.Graph;
 import org.apache.flink.graph.Vertex;
-import org.apache.flink.graph.library.GSAConnectedComponents;
+import org.apache.flink.graph.library.*;
+//import org.apache.flink.graph.library.similarity.*;
+//import org.apache.flink.graph.library.clustering.directed.*;
 import org.apache.flink.types.NullValue;
 
 /**
@@ -42,10 +29,6 @@ import org.apache.flink.types.NullValue;
  * For example: <code>1\t2\n1\t3\n</code> defines two edges,
  * 1-2 with and 1-3.
  *
- * Usage <code>ConnectedComponents &lt;edge path&gt; &lt;result path&gt;
- * &lt;number of iterations&gt; </code><br>
- * If no parameters are provided, the program is run with default data from
- * {@link ConnectedComponentsDefaultData}
  */
 public class DGARunner implements ProgramDescription {
 
@@ -66,18 +49,73 @@ public class DGARunner implements ProgramDescription {
 				return value;
 			}
 		}, env);
+		
+		DataSet result;
 
-		DataSet<Vertex<Long, Long>> verticesWithMinIds = graph
+		// Run the selected algorithm based on input parameters
+		if (algorithmId.equals("1")) {
+		// Connected components
+		result = graph
 				.run(new GSAConnectedComponents<Long, NullValue>(maxIterations));
+		} else if (algorithmId.equals("2")) {
+		// Vertex degrees
+		result = graph.getDegrees();
+		} else if (algorithmId.equals("3")) {
+		// Finding Motifs
+		graph = graph.subgraph(
+		new FilterFunction<Vertex<Long, Long>>() {
+			   	public boolean filter(Vertex<Long, Long> vertex) {
+					return (vertex.getId() > 2);
+			   }
+		   },
+		new FilterFunction<Edge<Long, NullValue>>() {
+				public boolean filter(Edge<Long, NullValue> edge) {
+					return (edge.getTarget() == 4);
+				}
+		});
+		result = graph.getTriplets();
+		} /* FIXME: else if (algorithmId == "4") {
+		// Shortest paths
+		DataSet<Vertex<Long, Long>> result = (new SingleSourceShortestPaths<Long>(1L, maxIterations)).run(graph);
+		}*/ else if (algorithmId.equals("5")) {
+		// Triangle count
+		result = graph
+				.run(new GSATriangleCount<Long, Long, NullValue>());
+		} else if (algorithmId.equals("6")) {
+		// Triangle listing
+		result = graph
+				.run(new TriangleEnumerator<Long, Long, NullValue>());
+		} /*else if (algorithmId == "7") {
+		// Jaccard Index
+		DataSet result = graph
+				.run(new JaccardIndex<Long, NullValue>());
+		} else if (algorithmId == "8") {
+		// Local clustering coeff.
+		DataSet result = graph
+				.run(new LocalClusteringCoefficient<Long, NullValue>());
+		} else if (algorithmId == "9") {
+		// Global clustering coeff.
+		DataSet<Vertex<Long, Long>> result = graph
+				.run(new GlobalClusteringCoefficient<Long, NullValue>());
+		} */else {
+			result = null;
+		}
+
 
 		// emit result
 		if (fileOutput) {
-			verticesWithMinIds.writeAsCsv(outputPath, "\n", "\t");
+			try {
+				result.writeAsCsv(outputPath, "\n", "\t");
+			} catch (IllegalArgumentException e) {
+				// writeAsCSV() can only be called on datasets of tuples
+				// Triangle counting only returns a dataset of ONE integer
+				result.writeAsText(outputPath);
+			}
 
 			// since file sinks are lazy, we trigger the execution explicitly
 			env.execute("DGARunner");
 		} else {
-			verticesWithMinIds.print();
+			result.print();
 		}
 	}
 
@@ -93,6 +131,7 @@ public class DGARunner implements ProgramDescription {
 	private static boolean fileOutput = false;
 	private static String edgeInputPath = null;
 	private static String outputPath = null;
+	private static String algorithmId = null;
   	
 	// Here we hardcore the maxIterations for the connected components algorithm
 	private static Integer maxIterations = 4;
@@ -102,20 +141,20 @@ public class DGARunner implements ProgramDescription {
 		if(args.length > 0) {
 			if(args.length != 3) {
 				System.err.println("Usage DGARunner <edge path> <output path> " +
-						"<num iterations>");
+						"<Algorithm id>");
 				return false;
 			}
 
 			fileOutput = true;
 			edgeInputPath = args[0];
 			outputPath = args[1];
-			maxIterations = Integer.parseInt(args[2]);
+			algorithmId = args[2];
 
 		} else {
 			System.out.println("Executing DGARunner example with default parameters and built-in default data.");
 			System.out.println("Provide parameters to read input data from files.");
 			System.out.println("Usage DGARunner <edge path> <output path> " +
-					"<num iterations>");
+					"<Algorithm id>");
 		}
 
 		return true;
