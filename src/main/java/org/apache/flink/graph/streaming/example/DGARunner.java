@@ -92,7 +92,7 @@ public class DGARunner implements ProgramDescription {
 		});
 		
 		
-		result = (new SingleSourceShortestPaths<Long>(1L, maxIterations)).run(graph2);
+		result = (new SingleSourceShortestPaths<Long>(shortestPathsVertextId, maxIterations)).run(graph2);
 		} else if (algorithmId.equals("5")) {
 		// Triangle count
 		result = graph
@@ -149,15 +149,16 @@ public class DGARunner implements ProgramDescription {
 	private static String outputPath = null;
 	private static String algorithmId = null;
   	
-	// Here we hardcore the maxIterations for the connected components algorithm
+	// Here we hardcode the maxIterations for the connected components algorithm
 	private static Integer maxIterations = 4;
+	private static long shortestPathsVertextId = 1L;
 
 	// Parsing input params
 	private static boolean parseParameters(String [] args) {
 		if(args.length > 0) {
-			if(args.length != 3) {
+			if(args.length != 5) {
 				System.err.println("Usage DGARunner <edge path> <output path> " +
-						"<Algorithm id>");
+						"<Algorithm id> <max iterations> <shortest path src vertexid Long>");
 				return false;
 			}
 
@@ -165,12 +166,14 @@ public class DGARunner implements ProgramDescription {
 			edgeInputPath = args[0];
 			outputPath = args[1];
 			algorithmId = args[2];
+			maxIterations = Integer.parseInt(args[3]);
+			shortestPathsVertextId = Long.parseLong(args[4]);
 
 		} else {
 			System.out.println("Executing DGARunner example with default parameters and built-in default data.");
 			System.out.println("Provide parameters to read input data from files.");
 			System.out.println("Usage DGARunner <edge path> <output path> " +
-					"<Algorithm id>");
+					"<Algorithm id> <max iterations> <shortest path src vertexid Long>`");
 		}
 
 		return true;
