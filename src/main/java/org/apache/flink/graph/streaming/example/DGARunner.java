@@ -74,10 +74,26 @@ public class DGARunner implements ProgramDescription {
 				}
 		});
 		result = graph.getTriplets();
-		} /* FIXME: else if (algorithmId == "4") {
+		} else if (algorithmId.equals("4")) {
 		// Shortest paths
-		DataSet<Vertex<Long, Long>> result = (new SingleSourceShortestPaths<Long>(1L, maxIterations)).run(graph);
-		}*/ else if (algorithmId.equals("5")) {
+
+		Graph<Long, Double, NullValue> graph1 = graph.mapVertices(new MapFunction<Vertex<Long, Long>,Double>() {
+			@Override
+			public Double map(Vertex<Long, Long> vertexValue) {
+				return (double) vertexValue.getValue();
+			}
+		});
+
+		Graph<Long, Double, Double> graph2 = graph1.mapEdges(new MapFunction<Edge<Long, NullValue>, Double>() {
+			@Override
+			public Double map(Edge<Long, NullValue> edgeValue) {
+				return 1.0;
+			}
+		});
+		
+		
+		result = (new SingleSourceShortestPaths<Long>(1L, maxIterations)).run(graph2);
+		} else if (algorithmId.equals("5")) {
 		// Triangle count
 		result = graph
 				.run(new GSATriangleCount<Long, Long, NullValue>());
