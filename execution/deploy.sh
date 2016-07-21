@@ -7,5 +7,6 @@ rsync -auvzl \
 	../start.sh ../stop.sh \
 	../pom.xml ../src \
 	flink.sh config.cfg \
+	clean.sh \
 	datasets \
 	$server_name:$server_dir/
