@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [[ "$#" != "7" ]]; then
-	echo 'expecting 7 arguments:' >&2
-	echo '    flink.sh $datasetCategory $datasetName $states $metric $metricArguments $workers $run' >&2
+if [[ "$#" != "6" ]]; then
+	echo 'expecting 6 arguments:' >&2
+	echo '    flink.sh $dataset $states $metric $metricArguments $workers $run' >&2
 	exit
 fi
 
@@ -16,13 +16,12 @@ function printTime {
 
 source config.cfg
 
-datasetCategory=$1
-datasetName=$2
-states=$3
-metric=$4
-metricArguments=$5
-workers=$6
-run=$7
+dataset=$1
+states=$2
+metric=$3
+metricArguments=$4
+workers=$5
+run=$6
 
 # 1: type (cc, dd, sssp, tc)
 case $metric in
@@ -45,10 +44,10 @@ case $metric in
 	esac
 
 
-datasetDir="${mainDatasetDir}/$datasetCategory/$datasetName"
-runtimesDir="${mainRuntimesDir}/$datasetCategory/$datasetName/$metric--$states"
-logDir="${mainLogDir}/$datasetCategory/$datasetName/$metric--$states--$workers"
-outputDir="${mainOutputDir}/$datasetCategory/$datasetName/$metric--$states"
+datasetDir="${mainDatasetDir}/${dataset}"
+runtimesDir="${mainRuntimesDir}/$dataset/$states/$metric/$workers"
+logDir="${mainLogDir}/$dataset/$states/$metric/$workers"
+outputDir="${mainOutputDir}/$dataset/$states/$metric/$workers"
 
 if [[ ! -d $runtimesDir ]]; then mkdir -p $runtimesDir; fi
 if [[ ! -d $logDir ]]; then mkdir -p $logDir; fi
@@ -59,9 +58,9 @@ runtimes="${runtimesDir}/${run}${runtimesSuffix}"
 if [[ -f $runtimes ]]; then echo "$runtimes exists" >&2; exit; fi
 
 for s in $(seq 1 $states); do
-	dataset="${datasetDir}/${s}${datasetSuffix}"
+	datasetPath="${datasetDir}/${s}${datasetSuffix}"
 
-	if [[ ! -f $dataset ]]; then echo "$dataset does not exist" >&2; exit; fi
+	if [[ ! -f $datasetPath ]]; then echo "$datasetPath does not exist" >&2; exit; fi
 
 	total_start=$(printTime)
 	if [[ $metric == "sssp" ]]; then
@@ -69,13 +68,13 @@ for s in $(seq 1 $states); do
 			log="${logDir}/${run}-${s}--${vertexId}${logSuffix}"
 			err="${logDir}/${run}-${s}--${vertexId}${errSuffix}"
 			output="${outputDir}/${run}-${s}--${vertexId}${outputSuffix}"
-			flink run -p $workers $jarPath $dataset $output $metricId $maxIterations $vertexId > >(tee $log) 2> >(tee $err >&2)
+			flink run -p $workers $jarPath $datasetPath $output $metricId $maxIterations $vertexId > >(tee $log) 2> >(tee $err >&2)
 		done
 	else
 		log="${logDir}/${run}-${s}${logSuffix}"
 		err="${logDir}/${run}-${s}${errSuffix}"
 		output="${outputDir}/${run}-${s}${outputSuffix}"
-		flink run -p $workers $jarPath $dataset $output $metricId $maxIterations $metricArguments > >(tee $log) 2> >(tee $err >&2)
+		flink run -p $workers $jarPath $datasetPath $output $metricId $maxIterations $metricArguments > >(tee $log) 2> >(tee $err >&2)
 	fi
 	total_end=$(printTime)
 	duration=$((${total_end} - ${total_start}))
