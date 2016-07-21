@@ -20,3 +20,7 @@ pom.xml.next
 release.properties
 .otto
 .ottoid
+
+execution/datasets
+execution/runtimes
+execution/output
