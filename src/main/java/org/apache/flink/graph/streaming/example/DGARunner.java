@@ -5,6 +5,8 @@ import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.common.JobExecutionResult;
+import java.util.concurrent.TimeUnit;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.graph.Edge;
@@ -129,7 +131,8 @@ public class DGARunner implements ProgramDescription {
 			}
 
 			// since file sinks are lazy, we trigger the execution explicitly
-			env.execute("DGARunner");
+			JobExecutionResult jobResult = env.execute("DGARunner");
+			System.out.println("The job took " + jobResult.getNetRuntime(TimeUnit.NANOSECONDS) + "ns to execute");
 		} else {
 			result.print();
 		}
