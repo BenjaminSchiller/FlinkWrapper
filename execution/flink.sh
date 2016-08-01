@@ -57,6 +57,8 @@ runtimes="${runtimesDir}/${run}${runtimesSuffix}"
 
 if [[ -f $runtimes ]]; then echo "$runtimes exists" >&2; exit; fi
 
+./start-job-manager.sh
+
 for s in $(seq 0 $((states-1))); do
 	datasetPath="${datasetDir}/${s}${datasetSuffix}"
 
@@ -81,6 +83,8 @@ for s in $(seq 0 $((states-1))); do
 	echo "$s	$duration" >> $runtimes
 done
 echo "TOTAL	$(awk '{ sum += $2; } END { print sum; }' "$runtimes")" >> $runtimes
+
+./stop-job-manager.sh
 
 
 
