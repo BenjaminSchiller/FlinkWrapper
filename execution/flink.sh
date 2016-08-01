@@ -57,7 +57,7 @@ runtimes="${runtimesDir}/${run}${runtimesSuffix}"
 
 if [[ -f $runtimes ]]; then echo "$runtimes exists" >&2; exit; fi
 
-for s in $(seq 1 $states); do
+for s in $(seq 0 $((states-1))); do
 	datasetPath="${datasetDir}/${s}${datasetSuffix}"
 
 	if [[ ! -f $datasetPath ]]; then echo "$datasetPath does not exist" >&2; exit; fi
