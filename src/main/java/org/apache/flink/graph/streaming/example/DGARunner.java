@@ -1,5 +1,6 @@
 package org.apache.flink.graph.streaming.example;
 
+import java.io.PrintWriter;
 import org.apache.flink.api.common.ProgramDescription;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -132,7 +133,9 @@ public class DGARunner implements ProgramDescription {
 
 			// since file sinks are lazy, we trigger the execution explicitly
 			JobExecutionResult jobResult = env.execute("DGARunner");
-			System.out.println("The job took " + jobResult.getNetRuntime(TimeUnit.NANOSECONDS) + "ns to execute");
+			PrintWriter writer = new PrintWriter("last-job-execution-time.txt", "UTF-8");
+			writer.println("Job execution time: " + jobResult.getNetRuntime(TimeUnit.NANOSECONDS) + " ns");
+			writer.close();
 		} else {
 			result.print();
 		}
