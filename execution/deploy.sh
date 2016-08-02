@@ -7,5 +7,6 @@ rsync -auvzl \
 	../start-job-manager.sh ../stop-job-manager.sh \
 	../pom.xml ../src \
 	flink.sh flinkTask.sh config.cfg \
+	_jobsRunner.sh \
 	clean.sh \
 	$server_name:$server_dir/

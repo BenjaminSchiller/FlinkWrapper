@@ -55,11 +55,15 @@ if [[ ! -d outputDir ]]; then mkdir -p $outputDir; fi
 
 runtimes="${runtimesDir}/${run}${runtimesSuffix}"
 
-if [[ -f $runtimes ]]; then echo "$runtimes exists" >&2; exit; fi
+if [[ -f $runtimes ]]; then echo "$runtimes exists"; exit; fi
 
 ./start-job-manager.sh
 
 for s in $(seq 0 $((states-1))); do
+
+	# echo "deleting all files from $flinkLogDir"
+	# rm $flinkLogDir/*
+
 	datasetPath="${datasetDir}/${s}${datasetSuffix}"
 
 	if [[ ! -f $datasetPath ]]; then echo "$datasetPath does not exist" >&2; exit; fi
@@ -81,10 +85,24 @@ for s in $(seq 0 $((states-1))); do
 	total_end=$(printTime)
 	duration=$((${total_end} - ${total_start}))
 	echo "$s	$duration" >> $runtimes
+	echo "$s	$duration"
+	# start=$(grep "Status of job" $flinkLogDir/flink-*-jobmanager-*.log | grep "RUNNING" | awk '{print $1}')
+	# end=$(grep "Status of job" $flinkLogDir/flink-*-jobmanager-*.log | grep "FINISHED" | awk '{print $1}')
+	# internal=$(($end-$start))
+	# echo "$s	$duration	$internal" >> $runtimes
+	# echo "$s	$duration	$internal"
+
+	# echo "deleting all files from $flinkLogDir"
+	# rm $flinkLogDir/*
 done
-echo "TOTAL	$(awk '{ sum += $2; } END { print sum; }' "$runtimes")" >> $runtimes
+sumA=$(awk '{ sum += $2; } END { print sum; }' "$runtimes")
+# sumB=$(awk '{ sum += $3; } END { print sum; }' "$runtimes")
+echo "TOTAL	$sumA" >> $runtimes
+echo "TOTAL	$sumA"
 
 ./stop-job-manager.sh
+# echo "deleting all files from $flinkLogDir"
+# rm $flinkLogDir/*
 
 
 
