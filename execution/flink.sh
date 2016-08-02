@@ -70,13 +70,13 @@ for s in $(seq 0 $((states-1))); do
 			log="${logDir}/${run}-${s}--${vertexId}${logSuffix}"
 			err="${logDir}/${run}-${s}--${vertexId}${errSuffix}"
 			output="${outputDir}/${run}-${s}--${vertexId}${outputSuffix}"
-			flink run -p $workers $jarPath $datasetPath $output $metricId $maxIterations $vertexId > >(tee $log) 2> >(tee $err >&2)
+			$flinkPath run -p $workers $jarPath $datasetPath $output $metricId $maxIterations $vertexId > >(tee $log) 2> >(tee $err >&2)
 		done
 	else
 		log="${logDir}/${run}-${s}${logSuffix}"
 		err="${logDir}/${run}-${s}${errSuffix}"
 		output="${outputDir}/${run}-${s}${outputSuffix}"
-		flink run -p $workers $jarPath $datasetPath $output $metricId $maxIterations $metricArguments > >(tee $log) 2> >(tee $err >&2)
+		$flinkPath run -p $workers $jarPath $datasetPath $output $metricId $maxIterations $metricArguments > >(tee $log) 2> >(tee $err >&2)
 	fi
 	total_end=$(printTime)
 	duration=$((${total_end} - ${total_start}))
