@@ -2,6 +2,8 @@ package org.apache.flink.graph.streaming.example;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
 import org.apache.flink.api.common.ProgramDescription;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -37,6 +39,7 @@ import org.apache.flink.types.NullValue;
 public class DGARunner implements ProgramDescription {
 
 	public final static Logger LOGGER = Logger.getLogger(DGARunner.class.getName()); 
+	public final static org.slf4j.Logger LOG = LoggerFactory.getLogger(DGARunner.class.getName());	
 
 	@SuppressWarnings("serial")
 	public static void main(String [] args) throws Exception {
@@ -140,6 +143,7 @@ public class DGARunner implements ProgramDescription {
 			JobExecutionResult jobResult = env.execute("DGARunner");
 			System.out.println("The job took " + jobResult.getNetRuntime(TimeUnit.NANOSECONDS) + "ns to execute");
 			LOGGER.info("The job took " + jobResult.getNetRuntime(TimeUnit.NANOSECONDS) + "ns to execute");
+			LOG.info("The job took {} ns to execute.", jobResult.getNetRuntime(TimeUnit.NANOSECONDS));
 
 		} else {
 			result.print();
