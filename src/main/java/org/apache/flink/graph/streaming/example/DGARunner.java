@@ -4,6 +4,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.slf4j.LoggerFactory;
 //import org.slf4j.Logger;
+import org.apache.flink.api.java.io.DiscardingOutputFormat;
 import org.apache.flink.api.common.ProgramDescription;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -132,11 +133,12 @@ public class DGARunner implements ProgramDescription {
 		// emit result
 		if (fileOutput) {
 			try {
-				result.writeAsCsv(outputPath, "\n", "\t");
+				//result.writeAsCsv(outputPath, "\n", "\t");
+				result.output(new DiscardingOutputFormat());
 			} catch (IllegalArgumentException e) {
 				// writeAsCSV() can only be called on datasets of tuples
 				// Triangle counting only returns a dataset of ONE integer
-				result.writeAsText(outputPath);
+				//result.writeAsText(outputPath);
 			}
 
 			// since file sinks are lazy, we trigger the execution explicitly
@@ -146,7 +148,7 @@ public class DGARunner implements ProgramDescription {
 			LOG.info("The job took {} ns to execute.", jobResult.getNetRuntime(TimeUnit.NANOSECONDS));
 
 		} else {
-			result.print();
+			//result.print();
 		}
 	}
 
