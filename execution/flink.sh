@@ -14,6 +14,10 @@ function printTime {
 	fi
 }
 
+function repl {
+	echo $1 | sed -e 's:,:_:g'
+}
+
 source config.cfg
 
 dataset=$1
@@ -45,9 +49,9 @@ case $metric in
 
 
 datasetDir="${mainDatasetDir}/${dataset}"
-runtimesDir="${mainRuntimesDir}/$dataset/$states/$metric/$workers"
-logDir="${mainLogDir}/$dataset/$states/$metric/$workers"
-outputDir="${mainOutputDir}/$dataset/$states/$metric/$workers"
+runtimesDir="${mainRuntimesDir}/${dataset}/$states/${metric}__${metricArguments}/$workers"
+logDir="${mainLogDir}/$dataset/$states/${metric}__${metricArguments}/$workers"
+outputDir="${mainOutputDir}/$dataset/$states/${metric}__${metricArguments}/$workers"
 
 if [[ ! -d $runtimesDir ]]; then mkdir -p $runtimesDir; fi
 if [[ ! -d $logDir ]]; then mkdir -p $logDir; fi
@@ -57,52 +61,44 @@ runtimes="${runtimesDir}/${run}${runtimesSuffix}"
 
 if [[ -f $runtimes ]]; then echo "$runtimes exists"; exit; fi
 
+echo "FLINK: writing runtimes to $runtimesDir"
+
 ./start-job-manager.sh
 
 for s in $(seq 0 $((states-1))); do
-
-	# echo "deleting all files from $flinkLogDir"
-	# rm $flinkLogDir/*
-
 	datasetPath="${datasetDir}/${s}${datasetSuffix}"
 
 	if [[ ! -f $datasetPath ]]; then echo "$datasetPath does not exist" >&2; exit; fi
 
 	total_start=$(printTime)
 	if [[ $metric == "sssp" ]]; then
-		for vertexId in $(echo $metricArguments | tr "," " "); do
+		executionTime=0
+		for vertexId in $(seq 0 $((${metricArguments}-1))); do
 			log="${logDir}/${run}-${s}--${vertexId}${logSuffix}"
 			err="${logDir}/${run}-${s}--${vertexId}${errSuffix}"
 			output="${outputDir}/${run}-${s}--${vertexId}${outputSuffix}"
 			$flinkPath run -p $workers $jarPath $datasetPath $output $metricId $maxIterations $vertexId > >(tee $log) 2> >(tee $err >&2)
+			execution=$(grep "The job took" $log | tail -n1 | sed 's/The job took //g' | sed 's/ns to execute//g')
+			executionTime=$((${executionTime}+${execution}))
 		done
 	else
 		log="${logDir}/${run}-${s}${logSuffix}"
 		err="${logDir}/${run}-${s}${errSuffix}"
 		output="${outputDir}/${run}-${s}${outputSuffix}"
-		$flinkPath run -p $workers $jarPath $datasetPath $output $metricId $maxIterations $metricArguments > >(tee $log) 2> >(tee $err >&2)
+		$flinkPath run -p $workers $jarPath $datasetPath $output $metricId $maxIterations 0 > >(tee $log) 2> >(tee $err >&2)
+		executionTime=$(grep "The job took" $log | tail -n1 | sed 's/The job took //g' | sed 's/ns to execute//g')
 	fi
 	total_end=$(printTime)
 	duration=$((${total_end} - ${total_start}))
-	echo "$s	$duration" >> $runtimes
-	echo "$s	$duration"
-	# start=$(grep "Status of job" $flinkLogDir/flink-*-jobmanager-*.log | grep "RUNNING" | awk '{print $1}')
-	# end=$(grep "Status of job" $flinkLogDir/flink-*-jobmanager-*.log | grep "FINISHED" | awk '{print $1}')
-	# internal=$(($end-$start))
-	# echo "$s	$duration	$internal" >> $runtimes
-	# echo "$s	$duration	$internal"
-
-	# echo "deleting all files from $flinkLogDir"
-	# rm $flinkLogDir/*
+	echo "$s	$duration	$executionTime" >> $runtimes
+	echo "$s	$duration	$executionTime"
 done
 sumA=$(awk '{ sum += $2; } END { print sum; }' "$runtimes")
-# sumB=$(awk '{ sum += $3; } END { print sum; }' "$runtimes")
-echo "TOTAL	$sumA" >> $runtimes
-echo "TOTAL	$sumA"
+sumB=$(awk '{ sum += $3; } END { print sum; }' "$runtimes")
+echo "TOTAL	$sumA	$sumB" >> $runtimes
+echo "TOTAL	$sumA	$sumB"
 
 ./stop-job-manager.sh
-# echo "deleting all files from $flinkLogDir"
-# rm $flinkLogDir/*
 
 
 
